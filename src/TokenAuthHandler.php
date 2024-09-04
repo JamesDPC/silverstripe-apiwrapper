@@ -14,7 +14,7 @@ class TokenAuthHandler implements AuthenticationHandler
     public function authenticateRequest(HTTPRequest $request)
     {
         if ($token = $request->getHeader($this->tokenHeader)) {
-            if (str_contains((string) $token, ':') === 0 || str_contains((string) $token, ':') === false) {
+            if (str_contains((string) $token, ':') === false) {
                 return null;
             }
 
@@ -23,7 +23,7 @@ class TokenAuthHandler implements AuthenticationHandler
             /**
              * @var Member
              */
-            $user = Member::get()->byID($uid);
+            $user = Member::get()->byID((int)$uid);
             if ($user && $user->exists()) {
                 $hash = $user->encryptWithUserSettings($token);
                 // we're not comparing against the RawToken because we want the 'slow' process above to execute

@@ -3,6 +3,8 @@
 namespace Symbiote\ApiWrapper;
 
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Security\Security;
+use SilverStripe\Security\SecurityToken;
 
 /**
  * Manages authentication of a user for webservice access
@@ -44,7 +46,9 @@ class WebserviceAuthenticator
      * Optionally set an hmac validator if you want to require hmac auth on
      * the messages.
      *
-     * @var HmacValidator
+     * TODO what is this object?
+     *
+     * @var object
      */
     public $hmacValidator;
 
@@ -52,9 +56,8 @@ class WebserviceAuthenticator
     {
         $token = $this->getToken($request);
 
-        $user = null;
-
-        if ((!Member::currentUserID() && !$this->allowPublicAccess) || $token) {
+        $user = Security::getCurrentUser();
+        if ((!$user && !$this->allowPublicAccess) || $token) {
             if (!$token) {
                 throw new WebServiceException(403, "Missing token parameter");
             }
@@ -63,7 +66,7 @@ class WebserviceAuthenticator
             if (!$user) {
                 throw new WebServiceException(403, "Invalid user token");
             }
-        } elseif ($this->allowSecurityId && Member::currentUserID()) {
+        } elseif ($this->allowSecurityId && isset($user->ID)) {
             // we check the SecurityID parameter for the current user
             $secParam = SecurityToken::inst()->getName();
             $securityID = $request->requestVar($secParam);
@@ -71,7 +74,7 @@ class WebserviceAuthenticator
                 throw new WebServiceException(403, "Invalid security ID");
             }
 
-            $user = Member::currentUser();
+            $user = Security::getCurrentUser();
         }
 
         if (!$user && !$this->allowPublicAccess) {

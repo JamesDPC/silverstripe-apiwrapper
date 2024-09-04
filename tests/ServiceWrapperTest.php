@@ -7,12 +7,14 @@ use SilverStripe\Control\HTTPRequest;
 use Symbiote\ApiWrapper\ServiceWrapperController;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Dev\TestOnly;
 
 class ServiceWrapperTest extends SapphireTest
 {
+
+    protected $usesDatabase = true;
+
     protected static $extra_dataobjects = [
-        ServiceWrapTestObject::class
+        ServiceWrapperTestObject::class
     ];
 
     public function testGetRequestArguments(): void
@@ -44,7 +46,7 @@ class ServiceWrapperTest extends SapphireTest
     public function testMapMethodArguments(): void
     {
 
-        $obj = ServiceWrapTestObject::create([
+        $obj = ServiceWrapperTestObject::create([
             'Title' => 'This is a page',
         ]);
 
@@ -54,7 +56,7 @@ class ServiceWrapperTest extends SapphireTest
 
         $requestVars = [
             'objectID' => $obj->ID,
-            'objectClass' => 'ServiceWrapTestObject',
+            'objectClass' => 'ServiceWrapperTestObject',
             'other' => 'value',
         ];
 
@@ -68,20 +70,5 @@ class ServiceWrapperTest extends SapphireTest
     public function methodForTesting(DataObject $object, $other)
     {
 
-    }
-}
-
-
-class ServiceWrapTestObject extends DataObject implements TestOnly
-{
-    private static string $table_name = 'ServiceWrapTestObject';
-
-    private static array $db = [
-        'Title' => 'Varchar(128)',
-    ];
-
-    public function canView($member = null)
-    {
-        return true;
     }
 }

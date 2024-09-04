@@ -23,7 +23,7 @@ class TokenAuthenticator
         /**
          * @var Member
          */
-        $user = Member::get()->byID($uid);
+        $user = Member::get()->byID((int)$uid);
         if ($user && $user->exists()) {
             $hash = $user->encryptWithUserSettings($token);
             // we're not comparing against the RawToken because we want the 'slow' process above to execute

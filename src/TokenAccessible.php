@@ -6,6 +6,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataExtension;
+use SilverStripe\Security\Member;
 use SilverStripe\Security\RandomGenerator;
 
 class TokenAccessible extends DataExtension
@@ -67,8 +68,11 @@ class TokenAccessible extends DataExtension
     {
         $generator = new RandomGenerator();
         $token = $generator->randomToken('sha1');
-        $this->getOwner()->Token = $this->getOwner()->encryptWithUserSettings($token);
-        $this->authToken = $token;
+        $member = $this->getOwner();
+        if($member instanceof Member) {
+            $this->getOwner()->Token = $member->encryptWithUserSettings($token);
+            $this->authToken = $token;
+        }
     }
 
     public function userToken()

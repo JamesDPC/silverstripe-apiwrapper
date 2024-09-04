@@ -64,8 +64,6 @@ class ServiceWrapperController extends Controller
                 $response->addHeader('Content-Type', 'application/' . $this->format);
             }
 
-            HTTP::add_cache_headers($this->response);
-
             $this->afterHandleRequest();
 
             return $response;
@@ -88,8 +86,6 @@ class ServiceWrapperController extends Controller
             $this->response->setStatusCode($code);
             return $this->sendError($exception->getMessage(), $code);
         }
-
-        return $this->response;
     }
 
     public function handleService(HTTPRequest $request)
@@ -184,7 +180,7 @@ class ServiceWrapperController extends Controller
                 // look up the actual class type
                 $type = DataObject::getSchema()->tableClass($allArgs[$typeArg]);
 
-                if (isset($allArgs[$idArg]) && $type && class_exists($type)) {
+                if (isset($allArgs[$idArg]) && is_string($type) && class_exists($type) && is_subclass_of($type, DataObject::class)) {
                     $object = $type::get()->byId($allArgs[$idArg]);
                     if ($object && $object->canView()) {
                         $params[$refParm->getName()] = $object;
@@ -195,6 +191,7 @@ class ServiceWrapperController extends Controller
             } elseif (isset($allArgs[$refParm->getName()])) {
                 $params[$refParm->getName()] = $allArgs[$refParm->getName()];
             } elseif ($refParm->getName() === 'file' && $requestType == 'POST') {
+                // TODO fix
                 // special case of a binary file upload
                 $params['file'] = $body;
             } elseif ($refParm->isOptional()) {
@@ -213,7 +210,7 @@ class ServiceWrapperController extends Controller
      * @param string $requestType
      * @return array
      */
-    public function getRequestArgs(HTTPRequest $request, $requestType = 'GET', array $methodConfig = [])
+    public function getRequestArgs(HTTPRequest $request, $requestType = 'GET', array $methodConfig = []): array
     {
         $allArgs = $requestType == 'GET' ? $request->getVars() : $request->postVars();
 
@@ -223,7 +220,7 @@ class ServiceWrapperController extends Controller
 
         if (str_contains($contentType, 'application/json') && count($allArgs) === 0 && strlen((string) $request->getBody())) {
             // decode the body to a params array
-            $bodyParams = Convert::json2array($request->getBody());
+            $bodyParams = json_decode((string)$request->getBody(), true);
             $allArgs = $bodyParams['params'] ?? $bodyParams;
         }
 
