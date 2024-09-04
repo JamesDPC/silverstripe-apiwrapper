@@ -45,14 +45,6 @@
             "Symbiote\\ApiWrapper\\Tests\\": "tests/"
         }
     },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.6.x-dev"
-        },
-        "expose": [
-          "client/script"
-        ]
-    },
     "prefer-stable": true,
     "minimum-stability": "dev",
     "config": {
