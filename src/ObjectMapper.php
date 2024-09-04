@@ -24,10 +24,7 @@ class ObjectMapper
         ]
     ];
 
-    /**
-     * @return array
-     */
-    public function mapObject($object)
+    public function mapObject($object): array
     {
         if (is_array($object) || $object instanceof SS_List) {
             return $this->mapList($object);

@@ -32,6 +32,7 @@ class TokenAuthHandler implements AuthenticationHandler
                 }
             }
         }
+
         return null;
     }
 

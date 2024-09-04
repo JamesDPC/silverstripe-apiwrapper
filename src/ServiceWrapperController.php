@@ -208,7 +208,6 @@ class ServiceWrapperController extends Controller
      * Process a request URL + body to get all parameters for a request
      *
      * @param string $requestType
-     * @return array
      */
     public function getRequestArgs(HTTPRequest $request, $requestType = 'GET', array $methodConfig = []): array
     {

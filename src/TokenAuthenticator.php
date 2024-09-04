@@ -32,6 +32,7 @@ class TokenAuthenticator
                 return $user;
             }
         }
+
         return null;
     }
 
