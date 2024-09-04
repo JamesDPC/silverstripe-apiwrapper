@@ -22,7 +22,7 @@ class ApiWrapperController extends Controller
         'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE',
     ];
 
-    public function handleRequest(HTTPRequest $request)
+    public function handleRequest(HTTPRequest $request): HTTPResponse
     {
         // for OPTIONS requests, ie CORS preflight,
         // respond with what's expected

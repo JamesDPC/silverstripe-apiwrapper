@@ -40,7 +40,7 @@ class ServiceWrapperController extends Controller
         $this->objectMapper = new ObjectMapper;
     }
 
-    public function handleRequest(HTTPRequest $request)
+    public function handleRequest(HTTPRequest $request): HTTPResponse
     {
         try {
             $this->beforeHandleRequest($request);
