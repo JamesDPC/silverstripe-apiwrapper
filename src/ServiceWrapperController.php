@@ -16,7 +16,6 @@ use SilverStripe\Security\Security;
 
 class ServiceWrapperController extends Controller
 {
-
     use WrappedApi;
 
     protected $format = 'json';
@@ -37,7 +36,7 @@ class ServiceWrapperController extends Controller
     public function __construct()
     {
         // this is overridable via injection
-        $this->objectMapper = new ObjectMapper;
+        $this->objectMapper = new ObjectMapper();
     }
 
     public function handleRequest(HTTPRequest $request): HTTPResponse
@@ -103,7 +102,7 @@ class ServiceWrapperController extends Controller
         $response = '';
 
         if ($svc && method_exists($svc, 'webEnabledMethods')) {
-            $allowedMethods = array();
+            $allowedMethods = [];
             if (method_exists($svc, 'webEnabledMethods')) {
                 $allowedMethods = $svc->webEnabledMethods();
             }
@@ -191,12 +190,12 @@ class ServiceWrapperController extends Controller
                 } else {
                     $params[$refParm->getName()] = null;
                 }
-            } else if (isset($allArgs[$refParm->getName()])) {
+            } elseif (isset($allArgs[$refParm->getName()])) {
                 $params[$refParm->getName()] = $allArgs[$refParm->getName()];
-            } else if ($refParm->getName() == 'file' && $requestType == 'POST') {
+            } elseif ($refParm->getName() == 'file' && $requestType == 'POST') {
                 // special case of a binary file upload
                 $params['file'] = $body;
-            } else if ($refParm->isOptional()) {
+            } elseif ($refParm->isOptional()) {
                 $params[$refParm->getName()] = $refParm->getDefaultValue();
             } else {
                 throw new WebServiceException(500, "Service method $method expects parameter " . $refParm->getName());

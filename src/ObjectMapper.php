@@ -56,7 +56,7 @@ class ObjectMapper
             $value = $object->$field;
             if ($value instanceof ViewableData) {
                 $value = $this->mapObject($value);
-            } else if (is_array($value) || $value instanceof SS_List) {
+            } elseif (is_array($value) || $value instanceof SS_List) {
                 $value = $this->mapList($value);
             }
             $item[$name] = $value;

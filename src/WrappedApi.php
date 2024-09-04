@@ -4,7 +4,6 @@ namespace Symbiote\ApiWrapper;
 
 trait WrappedApi
 {
-
     protected $segment;
 
     public function setSegment($s)

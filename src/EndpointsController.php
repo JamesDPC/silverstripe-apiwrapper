@@ -12,7 +12,8 @@ class EndpointsController extends Controller
         'list'
     ];
 
-    public function list() {
+    public function list()
+    {
         return $this->sendResponse(['items' => ['TODO']]);
     }
 }

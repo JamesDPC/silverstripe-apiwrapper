@@ -13,7 +13,6 @@ use SilverStripe\Security\Security;
  */
 class TokenAuthenticator
 {
-
     /**
      * @param String $token
      */

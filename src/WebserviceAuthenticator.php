@@ -2,7 +2,6 @@
 
 namespace Symbiote\ApiWrapper;
 
-
 /**
  * Manages authentication of a user for webservice access
  *
@@ -11,9 +10,9 @@ namespace Symbiote\ApiWrapper;
  */
 class WebserviceAuthenticator
 {
-    private static $dependencies = array(
+    private static $dependencies = [
         'tokenAuthenticator'    => TokenAuthenticator::class,
-    );
+    ];
 
     /**
      * Disable all public requests by default; If this is
@@ -61,7 +60,7 @@ class WebserviceAuthenticator
             if (!$user) {
                 throw new WebServiceException(403, "Invalid user token");
             }
-        } else if ($this->allowSecurityId && Member::currentUserID()) {
+        } elseif ($this->allowSecurityId && Member::currentUserID()) {
             // we check the SecurityID parameter for the current user
             $secParam = SecurityToken::inst()->getName();
             $securityID = $request->requestVar($secParam);
