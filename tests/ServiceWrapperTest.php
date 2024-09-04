@@ -15,7 +15,7 @@ class ServiceWrapperTest extends SapphireTest
         ServiceWrapTestObject::class
     ];
 
-    public function testGetRequestArguments()
+    public function testGetRequestArguments(): void
     {
 
         $request = new HTTPRequest('GET', 'param1/value1/param2/value2');
@@ -41,10 +41,10 @@ class ServiceWrapperTest extends SapphireTest
         $this->assertEquals('bodyval2', $args['bodyarg2']);
     }
 
-    public function testMapMethodArguments()
+    public function testMapMethodArguments(): void
     {
 
-        $obj = new ServiceWrapTestObject([
+        $obj = ServiceWrapTestObject::create([
             'Title' => 'This is a page',
         ]);
 
@@ -74,9 +74,9 @@ class ServiceWrapperTest extends SapphireTest
 
 class ServiceWrapTestObject extends DataObject implements TestOnly
 {
-    private static $table_name = 'ServiceWrapTestObject';
+    private static string $table_name = 'ServiceWrapTestObject';
 
-    private static $db = [
+    private static array $db = [
         'Title' => 'Varchar(128)',
     ];
 
