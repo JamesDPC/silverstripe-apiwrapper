@@ -59,16 +59,14 @@ class ObjectMapper
             } elseif (is_array($value) || $value instanceof SS_List) {
                 $value = $this->mapList($value);
             }
+
             $item[$name] = $value;
         }
 
         return $item;
     }
 
-    /**
-     * @return array
-     */
-    public function mapList($list)
+    public function mapList($list): array
     {
         $newList = [];
         $isObject = false;
@@ -76,6 +74,7 @@ class ObjectMapper
             if (is_string($key)) {
                 $isObject = true;
             }
+
             $newList[$key] = ($item instanceof DataObject || $item instanceof ArrayData) ? $this->mapObject($item) : $item;
         }
 

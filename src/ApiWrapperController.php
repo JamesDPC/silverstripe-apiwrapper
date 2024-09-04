@@ -9,14 +9,14 @@ use SilverStripe\Control\HTTPResponse;
 
 class ApiWrapperController extends Controller
 {
-    private static $versions = [
+    private static array $versions = [
         'v1' => [
             'docs'      => EndpointsController::class,
             'watch'     => ServiceWrapperController::class,
         ]
     ];
 
-    private static $cors = [
+    private static array $cors = [
         'Access-Control-Allow-Origin' => '*',
         'Access-Control-Allow-Headers' => 'Authorization, Content-Type',
         'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE',
@@ -27,9 +27,10 @@ class ApiWrapperController extends Controller
         // for OPTIONS requests, ie CORS preflight,
         // respond with what's expected
         if (strtolower($request->httpMethod()) === 'options') {
-            $response = new HTTPResponse('');
+            $response = HTTPResponse::create();
             return $this->addCorsHeaders($response);
         }
+
         $apiVersions = self::config()->versions;
         foreach ($apiVersions as $version => $handlers) {
             $res = $request->match($version, true);
@@ -41,6 +42,7 @@ class ApiWrapperController extends Controller
                             if (method_exists($controller, 'setSegment')) {
                                 $controller->setSegment($segment);
                             }
+
                             $response = $controller->handleRequest($request);
                             return $this->addCorsHeaders($response);
                         }
@@ -57,13 +59,14 @@ class ApiWrapperController extends Controller
         return $this->httpError(404);
     }
 
-    protected function addCorsHeaders(HTTPResponse $response)
+    protected function addCorsHeaders(HTTPResponse $response): HTTPResponse
     {
-        if (count($this->config()->cors)) {
+        if (count($this->config()->cors) !== 0) {
             foreach ($this->config()->cors as $header => $val) {
                 $response->addHeader($header, $val);
             }
         }
+
         return $response;
     }
 }

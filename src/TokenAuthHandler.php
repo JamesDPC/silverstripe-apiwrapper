@@ -14,10 +14,11 @@ class TokenAuthHandler implements AuthenticationHandler
     public function authenticateRequest(HTTPRequest $request)
     {
         if ($token = $request->getHeader($this->tokenHeader)) {
-            if (strpos($token, ':') === false) {
-                return;
+            if (str_contains((string) $token, ':') === 0 || str_contains((string) $token, ':') === false) {
+                return null;
             }
-            list($uid, $token) = explode(':', $token, 2);
+
+            [$uid, $token] = explode(':', (string) $token, 2);
             // done directly against the DB because we don't have a user context yet
             /**
              * @var Member
@@ -31,6 +32,7 @@ class TokenAuthHandler implements AuthenticationHandler
                 }
             }
         }
+        return null;
     }
 
     public function logIn(Member $member, $persistent = false, ?HTTPRequest $request = null)

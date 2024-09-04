@@ -2,6 +2,8 @@
 
 namespace Symbiote\ApiWrapper;
 
+use SilverStripe\Control\HTTPRequest;
+
 /**
  * Manages authentication of a user for webservice access
  *
@@ -10,7 +12,7 @@ namespace Symbiote\ApiWrapper;
  */
 class WebserviceAuthenticator
 {
-    private static $dependencies = [
+    private static array $dependencies = [
         'tokenAuthenticator'    => TokenAuthenticator::class,
     ];
 
@@ -46,7 +48,7 @@ class WebserviceAuthenticator
      */
     public $hmacValidator;
 
-    public function authenticate(SS_HTTPRequest $request)
+    public function authenticate(HTTPRequest $request): bool
     {
         $token = $this->getToken($request);
 
@@ -56,6 +58,7 @@ class WebserviceAuthenticator
             if (!$token) {
                 throw new WebServiceException(403, "Missing token parameter");
             }
+
             $user = $this->tokenAuthenticator->authenticate($token);
             if (!$user) {
                 throw new WebServiceException(403, "Invalid user token");
@@ -67,6 +70,7 @@ class WebserviceAuthenticator
             if ($securityID && ($securityID != SecurityToken::inst()->getValue())) {
                 throw new WebServiceException(403, "Invalid security ID");
             }
+
             $user = Member::currentUser();
         }
 
@@ -75,16 +79,14 @@ class WebserviceAuthenticator
         }
 
         // now, if we have an hmacValidator in place, use it
-        if ($this->hmacValidator && $user) {
-            if (!$this->hmacValidator->validateHmac($user, $request)) {
-                throw new WebServiceException(403, "Invalid message");
-            }
+        if ($this->hmacValidator && $user && !$this->hmacValidator->validateHmac($user, $request)) {
+            throw new WebServiceException(403, "Invalid message");
         }
 
         return true;
     }
 
-    protected function getToken(SS_HTTPRequest $request)
+    protected function getToken(HTTPRequest $request)
     {
         $token = $request->requestVar('token');
         if (!$token) {

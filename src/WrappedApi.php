@@ -15,8 +15,9 @@ trait WrappedApi
     {
         $json = $request->getBody();
         if (!isset($json)) {
-            $json = json_decode($json);
+            $json = json_decode((string) $json);
         }
+
         return $json;
     }
 

@@ -8,7 +8,7 @@ class EndpointsController extends Controller
 {
     use WrappedApi;
 
-    private static $allowed_actions = [
+    private static array $allowed_actions = [
         'list'
     ];
 

@@ -18,7 +18,7 @@ class TokenAuthenticator
      */
     public function authenticate($token)
     {
-        list($uid, $token) = explode(':', $token, 2);
+        [$uid, $token] = explode(':', $token, 2);
         // done directly against the DB because we don't have a user context yet
         /**
          * @var Member
@@ -32,6 +32,7 @@ class TokenAuthenticator
                 return $user;
             }
         }
+        return null;
     }
 
     /**

@@ -48,7 +48,7 @@ class ServiceWrapperController extends Controller
             // borrowed from Controller
             $this->urlParams = $request->allParams();
             $this->request = $request;
-            $this->response = new HTTPResponse();
+            $this->response = HTTPResponse::create();
 
             $this->extend('onBeforeInit');
             $this->init();
@@ -63,13 +63,14 @@ class ServiceWrapperController extends Controller
             if ($response instanceof HTTPResponse) {
                 $response->addHeader('Content-Type', 'application/' . $this->format);
             }
+
             HTTP::add_cache_headers($this->response);
 
             $this->afterHandleRequest();
 
             return $response;
         } catch (WebServiceException $exception) {
-            $this->response = new HTTPResponse();
+            $this->response = HTTPResponse::create();
             $this->response->setStatusCode($exception->status);
             return $this->sendError($exception->getMessage(), $exception->status);
             // $this->response->setBody();
@@ -82,7 +83,8 @@ class ServiceWrapperController extends Controller
             if (class_exists(PermissionDeniedException::class) && $exception instanceof PermissionDeniedException) {
                 $code = 403;
             }
-            $this->response = new HTTPResponse();
+
+            $this->response = HTTPResponse::create();
             $this->response->setStatusCode($code);
             return $this->sendError($exception->getMessage(), $code);
         }
@@ -92,14 +94,12 @@ class ServiceWrapperController extends Controller
 
     public function handleService(HTTPRequest $request)
     {
-        $service = ucfirst($this->segment) . 'Service';
+        $service = ucfirst((string) $this->segment) . 'Service';
         $method = $request->shift();
         $body = $request->getBody();
-        $requestType = strlen($body) > 0 ? 'POST' : $request->httpMethod(); // (count($request->postVars()) > 0 ? 'POST' : 'GET');
+        $requestType = strlen((string) $body) > 0 ? 'POST' : $request->httpMethod(); // (count($request->postVars()) > 0 ? 'POST' : 'GET');
 
         $svc = $this->service ?: Injector::inst()->get($service);
-
-        $response = '';
 
         if ($svc && method_exists($svc, 'webEnabledMethods')) {
             $allowedMethods = [];
@@ -111,9 +111,9 @@ class ServiceWrapperController extends Controller
             $callMethod = $method;
 
             // if we have a list of methods, lets use those to restrict
-            if (count($allowedMethods)) {
+            if (count($allowedMethods) !== 0) {
                 $methodConfig = $this->getServiceMethod($method, $allowedMethods, $requestType);
-                $callMethod = isset($methodConfig['call']) ? $methodConfig['call'] : $method;
+                $callMethod = $methodConfig['call'] ?? $method;
             } else {
                 // we only allow 'read only' requests so we wrap everything
                 // in a readonly transaction so that any database request
@@ -161,8 +161,9 @@ class ServiceWrapperController extends Controller
      *              The method that will be called
      * @param array $allArgs
      *              All the arguments found in the request
+     * @return mixed[]
      */
-    public function mapMethodToParameters(\ReflectionMethod $method, $allArgs)
+    public function mapMethodToParameters(\ReflectionMethod $method, $allArgs): array
     {
         $params = [];
         $refParams = $method->getParameters();
@@ -172,13 +173,14 @@ class ServiceWrapperController extends Controller
             $paramClass = $refParm->getClass();
             // if we're after a dataobject, we'll try and find one using
             // this name with ID and Type parameters
-            if ($paramClass && ($paramClass->getName() == DataObject::class || $paramClass->isSubclassOf(DataObject::class))) {
+            if ($paramClass && ($paramClass->getName() === DataObject::class || $paramClass->isSubclassOf(DataObject::class))) {
                 $idArg = $refParm->getName() . 'ID';
                 $typeArg = $refParm->getName() . 'Class';
 
                 if (!isset($allArgs[$typeArg])) {
                     throw new \RuntimeException("Missing argument " . $refParm->getName(), 400);
                 }
+
                 // look up the actual class type
                 $type = DataObject::getSchema()->tableClass($allArgs[$typeArg]);
 
@@ -192,15 +194,16 @@ class ServiceWrapperController extends Controller
                 }
             } elseif (isset($allArgs[$refParm->getName()])) {
                 $params[$refParm->getName()] = $allArgs[$refParm->getName()];
-            } elseif ($refParm->getName() == 'file' && $requestType == 'POST') {
+            } elseif ($refParm->getName() === 'file' && $requestType == 'POST') {
                 // special case of a binary file upload
                 $params['file'] = $body;
             } elseif ($refParm->isOptional()) {
                 $params[$refParm->getName()] = $refParm->getDefaultValue();
             } else {
-                throw new WebServiceException(500, "Service method $method expects parameter " . $refParm->getName());
+                throw new WebServiceException(500, "Service method {$method} expects parameter " . $refParm->getName());
             }
         }
+
         return $params;
     }
 
@@ -210,26 +213,18 @@ class ServiceWrapperController extends Controller
      * @param string $requestType
      * @return array
      */
-    public function getRequestArgs(HTTPRequest $request, $requestType = 'GET', $methodConfig = [])
+    public function getRequestArgs(HTTPRequest $request, $requestType = 'GET', array $methodConfig = [])
     {
-        if ($requestType == 'GET') {
-            $allArgs = $request->getVars();
-        } else {
-            $allArgs = $request->postVars();
-        }
+        $allArgs = $requestType == 'GET' ? $request->getVars() : $request->postVars();
 
         unset($allArgs['url']);
 
-        $contentType = strtolower($request->getHeader('Content-Type'));
+        $contentType = strtolower((string) $request->getHeader('Content-Type'));
 
-        if (strpos($contentType, 'application/json') !== false && !count($allArgs) && strlen($request->getBody())) {
+        if (str_contains($contentType, 'application/json') && count($allArgs) === 0 && strlen((string) $request->getBody())) {
             // decode the body to a params array
             $bodyParams = Convert::json2array($request->getBody());
-            if (isset($bodyParams['params'])) {
-                $allArgs = $bodyParams['params'];
-            } else {
-                $allArgs = $bodyParams;
-            }
+            $allArgs = $bodyParams['params'] ?? $bodyParams;
         }
 
         // see if there's any other URL bits to chew up
@@ -243,6 +238,7 @@ class ServiceWrapperController extends Controller
                     if (is_numeric($arg)) {
                         continue;
                     }
+
                     $allArgs[$arg] = $argval;
                 }
             } else {
@@ -251,10 +247,11 @@ class ServiceWrapperController extends Controller
         } else {
             for ($i = 0, $c = count($bits); $i < $c;) {
                 $key = $bits[$i];
-                $val = isset($bits[$i + 1]) ? $bits[$i + 1] : null;
+                $val = $bits[$i + 1] ?? null;
                 if ($val && !isset($allArgs[$key])) {
                     $allArgs[urldecode($key)] = urldecode($val);
                 }
+
                 $i += 2;
             }
         }
@@ -267,7 +264,7 @@ class ServiceWrapperController extends Controller
     protected function getServiceMethod($method, $allowedMethods, $requestType)
     {
         if (!isset($allowedMethods[$method])) {
-            throw new WebServiceException(403, "You do not have permission to $method");
+            throw new WebServiceException(403, "You do not have permission to {$method}");
         }
 
         $info = $allowedMethods[$method];
@@ -275,12 +272,10 @@ class ServiceWrapperController extends Controller
         $allowedType = $info;
         $allowPublic = false;
         if (is_array($info)) {
-            $allowedType = isset($info['type']) ? $info['type'] : 'GET';
+            $allowedType = $info['type'] ?? 'GET';
 
-            if (isset($info['perm'])) {
-                if (!Permission::check($info['perm'])) {
-                    throw new WebServiceException(403, "You do not have permission to $method");
-                }
+            if (isset($info['perm']) && !Permission::check($info['perm'])) {
+                throw new WebServiceException(403, "You do not have permission to {$method}");
             }
 
             $allowPublic = isset($info['public']) && $info['public'];
@@ -289,12 +284,12 @@ class ServiceWrapperController extends Controller
         }
 
         if (!Security::getCurrentUser() && !$allowPublic) {
-            throw new WebServiceException(403, "Method $method not allowed; no public methods defined");
+            throw new WebServiceException(403, "Method {$method} not allowed; no public methods defined");
         }
 
         // otherwise it might be the wrong request type
         if ($requestType != $allowedType) {
-            throw new WebServiceException(405, "$method does not support $requestType");
+            throw new WebServiceException(405, "{$method} does not support {$requestType}");
         }
 
         return $info;
