@@ -19,12 +19,21 @@
         }
     ],
     "require": {
-        "silverstripe/framework": "~4.0"
+        "silverstripe/framework": "^5"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.0",
-        "phpunit/phpunit": "^5.7"
+        "cambis/silverstripe-rector": "^0.5.1",
+        "phpunit/phpunit": "^9.5",
+        "syntro/silverstripe-phpstan": "^5",
+        "nswdpc/ci-files": "^1"
     },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/nswdpc/ci-files.git"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Symbiote\\ApiWrapper\\": "src/"
@@ -44,5 +53,11 @@
         ]
     },
     "prefer-stable": true,
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true
+        }
+    }
 }
